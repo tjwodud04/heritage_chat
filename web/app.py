@@ -7,14 +7,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from heritage_chatbot import LegalChatbot
+from heritage_chatbot import HeritageChatbot
 
-chatbot = LegalChatbot(verbose=True)
+chatbot = HeritageChatbot(verbose=True)
 
 
 def main():
     st.set_page_config(page_title="Seoul Heritage Guide", page_icon="")
-    st.title("Do you want to know about Seoul Heritage?")
+    st.title("Mainly support information about heritage of Seoul")
 
     # Initialize chat history
     if "messages" not in st.session_state:
@@ -28,7 +28,7 @@ def main():
 
     # React to user input
     if query := st.chat_input(
-        "What kind of thing do you want to know about the Seoul Heritage? Explain your inquiry."
+        "Feel free to ask anything related to heritage of Seoul."
     ):
         # Display user message in chat message container
         st.chat_message("user").markdown(query)

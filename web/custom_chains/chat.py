@@ -14,7 +14,7 @@ class HeritageAnswer(BaseModel):
 
 
 def get_heritage_help_chain(llm: ChatOpenAI) -> LLMChain:
-    parser = PydanticOutputParser(pydantic_object=heritage_basis)
+    parser = PydanticOutputParser(pydantic_object=HeritageAnswer)
     init_chat_template = """
     You are an AI guide who knows information about heritage of Seoul in Korea. 
     Your role is to give help foreigners who visit korea.

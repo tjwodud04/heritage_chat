@@ -42,7 +42,8 @@ class HeritageChatbot:
         self.embedding_model = OpenAIEmbeddings()
 
         # self.retriever = get_faiss_ensemble_retriever(self.embedding_model)
-        self.retriever = get_pinecone_retriever(self.embedding_model)
+        # self.retriever = get_pinecone_retriever(self.embedding_model)
+        self.retriever = get_chroma_retriever(self.embedding_model)
         self.heritage_help_chain = get_heritage_help_chain(self.llm_advisor)
 
 
@@ -56,24 +57,31 @@ class HeritageChatbot:
         heritage_basis = "\n\n\n".join(heritage_basis)
 
         eng_guide = self.heritage_help_chain.run(
-            inquiry=inquiry, related_heritage=heritage_basis, history=self.sum_memory.buffer
+            inquiry=inquiry,
+            related_heritage=heritage_basis[:10],
+            history=self.sum_memory.buffer
         )
         eng_guide_dict = json.loads(eng_guide)
-        eng_guide_format = """{{ conclusion }}
-        
-                            # Guide info
-                            {{ heritage_info }}
+        eng_guide_format = """
+                            ### Brief Explanation
+                            {{ heritage_explanation }}
                             
-                            ## Explanation
-                            {% for guide in related_heritage %}
-                            - {{heritage_explanation}}
-                            {% endfor %}
+                            ### Supplement Information
+                            {% for heritage_lists in related_heritage %}
+                            - {{heritage_lists}}
+                            {% endfor %}                            
                             """
+        ## Explanation
+        # { %
+        # for guide in related_heritage %}
+        # - {{heritage_explanation}}
+        # { % endfor %}
         answer_template = Template(eng_guide_format)
         rendered_answer = answer_template.render(
-            conclusion=eng_guide_dict["conclusion"],
-            advice=eng_guide_dict["heritage_info"],
-            related_laws=eng_guide_dict["heritage_explanation"],
+            # conclusion=eng_guide_dict["conclusion"],
+            heritage_explanation=eng_guide_dict["heritage_solution"],
+            related_heritage=eng_guide_dict["heritage_basis"],
+            # related_heritage=eng_guide_dict["heritage_basis"],
         )
 
         # 대화 내용 요약 후 메모리에 저장

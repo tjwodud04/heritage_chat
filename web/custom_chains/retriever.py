@@ -19,11 +19,11 @@ from langchain.docstore.document import Document
 from langchain.chains.question_answering import load_qa_chain
 import pinecone
 
-__import__("pysqlite3")
-
-import sys
-
-sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
+# __import__("pysqlite3")
+#
+# import sys
+#
+# sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 
 # 참고
 # https://python.langchain.com/docs/use_cases/question_answering/how_to/question_answering
@@ -31,7 +31,7 @@ sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 
 def get_chroma_retriever(
     embedding_model: Embeddings,
-    root: Union[str, bytes, os.PathLike] = "heritage_data/서울시 유적지 현화 (영어).json",
+    root: Union[str, bytes, os.PathLike] = "C:/Users/일렉트로존/Desktop/Gitrepo/heritage_chat/heritage_data/서울시 유적지 현황 (영어).json",
     chunk_size: int = 1000,
     chunk_overlap: int = 100,
 ):
@@ -42,12 +42,14 @@ def get_chroma_retriever(
     )
     # embedding_model = OpenAIEmbeddings()
     # vector_db = Chroma(embedding_function=embedding_model)
-    txts = sorted(glob.glob(root))
+    # txts = sorted(glob.glob(root))
     splitted_txts: List[Document] = list()
-    for txt_path in txts:
-        raw_doc = TextLoader(txt_path).load()
-        splited_docs = txt_spliter.split_documents(raw_doc)
-        splitted_txts.extend(splited_docs)
+    # for txt_path in txts:
+    # raw_doc = TextLoader(txt_path).load()
+    raw_doc = TextLoader(root, encoding="utf-8").load()
+
+    splited_docs = txt_spliter.split_documents(raw_doc)
+    splitted_txts.extend(splited_docs)
         # vector_db.add_documents(splited_docs)
     chroma_db = Chroma.from_documents(
         documents=splitted_txts,

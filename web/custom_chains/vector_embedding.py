@@ -21,10 +21,10 @@ from langchain.vectorstores import FAISS, Pinecone, Chroma  # 무료
 from langchain.vectorstores.base import VectorStoreRetriever
 from langchain.chains import RetrievalQA
 
-__import__("pysqlite3")
-import sys
-
-sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
+# __import__("pysqlite3")
+# import sys
+#
+# sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 
 import pinecone
 import chromadb
@@ -42,16 +42,17 @@ class HeritageSplitter:
 
     def split_from_file(self, txt_file: Union[str, PathLike, Path]) -> List[Document]:
         json_file = txt_file.replace(".txt", ".json")
-        with open(txt_file, "r") as f:
+        with open(txt_file, "r", encoding="utf-8") as f:
             full_text = "".join(f.readlines())
             # full_text = "\n".join(f.readlines())
-        with open(json_file, "r") as f:
+        with open(json_file, "r", encoding="utf-8") as f:
             json_obj = json.load(f)
-            json_obj = json_obj["기본정보"]
-        metadata = dict()
-        metadata["law_id"] = json_obj["법령ID"]
+            # json_obj = json_obj["기본정보"]
+        # metadata = dict()
+        # metadata["law_id"] = json_obj["법령ID"]
         txt_file = Path(txt_file)
-        return self.split_text(full_text, txt_file.stem, metadata)
+        # return self.split_text(full_text, txt_file.stem, metadata)
+        return self.split_text(full_text, txt_file.stem)
 
     def split_text(
             self, text: str, heritage_name: str, metadata: Optional[Dict] = None
@@ -101,42 +102,42 @@ class HeritageSplitter:
 #         return docs
 
 
-def vectorized_embedding_store(
-        txt_path, chunk_size: int = 2000, chunk_overlap: int = 100
-):
-    # https://python.langchain.com/docs/integrations/document_loaders/
-    # 웹페이지에서 가져오는 loader 지정
-    # loader = WebBaseLoader()
-    loader = TextLoader(txt_path, encoding="utf-8")
-    # raw_documents = loader.load()
-
-    # 문자열을 vector embbedding하기
-    # 여기서는 HuggingFace를 사용한다. / #pip install sentence_transformers # HuggingFace Embedding 사용 위해서 필요
-    embeddings = HuggingFaceEmbeddings()
-    # embeddings = OpenAIEmbeddings()
-
-    # text splitter 설정
-    # 문서의 양이 많기 때문에 여러개의 서브문서로 분할 하는데 사용
-    text_splitter = CharacterTextSplitter(
-        chunk_size=chunk_size, chunk_overlap=chunk_overlap
-    )
-
-    # vectorstore 설정
-    # vectorstore는 Embedding 벡터와 텍스트를 저장하는 DB
-    # 여기서 사용하는 FAISS는 유사도 검색모델 중 하나로 단어나 문장의 의미가 비슷한 것을 찾을 수 있다.
-    # pip install faiss-cpu 설치 필요. FAISS를 사용하기 위해서
-    # loader로 읽어들인 데이터를 text_splitter를 통해 분할하고 FAISS를 통해 유사도 검색을 할 수 있도록 vectorstore를 설정
-    index = VectorstoreIndexCreator(
-        vectorstore_cls=FAISS,
-        embedding=embeddings,
-        text_splitter=text_splitter,
-    ).from_loaders([loader])
-
-    # 이후 재사용을 위해서 vector db를 파일로 저장
-    # 재사용 시에는 embedding과정 필요없음
-    # faiss-rus-ukr 폴더가 생성되고 하위에
-    # index.faiss, index.pkl 파일이 저장됨
-    index.vectorstore.save_local("law_vectorized_result")
+# def vectorized_embedding_store(
+#         txt_path, chunk_size: int = 2000, chunk_overlap: int = 100
+# ):
+#     # https://python.langchain.com/docs/integrations/document_loaders/
+#     # 웹페이지에서 가져오는 loader 지정
+#     # loader = WebBaseLoader()
+#     loader = TextLoader(txt_path, encoding="utf-8")
+#     # raw_documents = loader.load()
+#
+#     # 문자열을 vector embbedding하기
+#     # 여기서는 HuggingFace를 사용한다. / #pip install sentence_transformers # HuggingFace Embedding 사용 위해서 필요
+#     embeddings = HuggingFaceEmbeddings()
+#     # embeddings = OpenAIEmbeddings()
+#
+#     # text splitter 설정
+#     # 문서의 양이 많기 때문에 여러개의 서브문서로 분할 하는데 사용
+#     text_splitter = CharacterTextSplitter(
+#         chunk_size=chunk_size, chunk_overlap=chunk_overlap
+#     )
+#
+#     # vectorstore 설정
+#     # vectorstore는 Embedding 벡터와 텍스트를 저장하는 DB
+#     # 여기서 사용하는 FAISS는 유사도 검색모델 중 하나로 단어나 문장의 의미가 비슷한 것을 찾을 수 있다.
+#     # pip install faiss-cpu 설치 필요. FAISS를 사용하기 위해서
+#     # loader로 읽어들인 데이터를 text_splitter를 통해 분할하고 FAISS를 통해 유사도 검색을 할 수 있도록 vectorstore를 설정
+#     index = VectorstoreIndexCreator(
+#         vectorstore_cls=FAISS,
+#         embedding=embeddings,
+#         text_splitter=text_splitter,
+#     ).from_loaders([loader])
+#
+#     # 이후 재사용을 위해서 vector db를 파일로 저장
+#     # 재사용 시에는 embedding과정 필요없음
+#     # faiss-rus-ukr 폴더가 생성되고 하위에
+#     # index.faiss, index.pkl 파일이 저장됨
+#     index.vectorstore.save_local("law_vectorized_result")
 
 
 def embed_with_chroma(
@@ -149,28 +150,31 @@ def embed_with_chroma(
 ):
     embedding_model = OpenAIEmbeddings()
 
-    law_db = Chroma(
+    heritage_db = Chroma(
         collection_name="heritage",
         embedding_function=embedding_model,
         persist_directory=persist_directory,
     )
-    law_splitter = HeritageSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    heritage_splitter = HeritageSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
     lq = deque()
-    for heritage_txt in tqdm(
-            glob.glob(os.path.join(law_path, "*.txt")), desc="vectorizing heritage"
-    ):
-        heritage_docs = law_splitter.split_from_file(heritage_txt)
-        try:
-            law_db.add_documents(documents=heritage_docs)
-        except:
-            lq.append(heritage_docs)
+    heritage_txt = "C:/Users/일렉트로존/Desktop/Gitrepo/heritage_chat/heritage_data/서울시 유적지 현황 (영어).json"
+    heritage_docs = heritage_splitter.split_from_file(heritage_txt)
+    # for heritage_txt in tqdm(
+    #         # glob.glob(os.path.join(law_path, "*.txt")), desc="vectorizing heritage"
+    #         glob.glob(os.path.join(law_path, "*.json")), desc="vectorizing heritage"
+    # ):
+    #     heritage_docs = heritage_splitter.split_from_file(heritage_txt)
+    try:
+        heritage_db.add_documents(documents=heritage_docs)
+    except:
+        lq.append(heritage_docs)
 
-    while lq:
-        ldocs = lq.popleft()
-        try:
-            law_db.add_documents(documents=ldocs)
-        except:
-            lq.append(ldocs)
+    # while lq:
+    #     ldocs = lq.popleft()
+    #     try:
+    #         heritage_db.add_documents(documents=ldocs)
+    #     except:
+    #         lq.append(ldocs)
 
     # prec_db = Chroma(
     #     collection_name="precedent",
