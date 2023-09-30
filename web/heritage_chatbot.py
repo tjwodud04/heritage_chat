@@ -46,16 +46,16 @@ class HeritageChatbot:
         self.heritage_help_chain = get_heritage_help_chain(self.llm_advisor)
 
 
-    def __proc_legal_doc(self, doc:Document):
+    def __proc_heritage_doc(self, doc:Document):
         src, _ = os.path.splitext(os.path.basename(doc.metadata["source"]))
         return "#"+src+'\n'+doc.page_content
 
     def __call__(self, inquiry: str) -> Dict:
         heritage_basis:List[Document] = self.retriever.get_relevant_documents(inquiry)
-        heritage_basis:List[str] = list(map(self.__proc_legal_doc, heritage_basis))
+        heritage_basis:List[str] = list(map(self.__proc_heritage_doc, heritage_basis))
         heritage_basis = "\n\n\n".join(heritage_basis)
 
-        eng_guide = self.legal_help_chain.run(
+        eng_guide = self.heritage_help_chain.run(
             inquiry=inquiry, related_heritage=heritage_basis, history=self.sum_memory.buffer
         )
         eng_guide_dict = json.loads(eng_guide)
