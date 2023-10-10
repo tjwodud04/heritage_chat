@@ -31,7 +31,7 @@ import pinecone
 
 def get_chroma_retriever(
     embedding_model: Embeddings,
-    root: Union[str, bytes, os.PathLike] = "C:/Users/일렉트로존/Desktop/Gitrepo/heritage_chat/heritage_data/서울시 유적지 현황 (영어).json",
+    root: Union[str, bytes, os.PathLike] = "./서울시 유적지 현황 (영어).json",
     chunk_size: int = 1000,
     chunk_overlap: int = 100,
 ):
