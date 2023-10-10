@@ -110,7 +110,6 @@ class HeritageChatbot:
         return rendered_answer
 
     def __del__(self):
-        # 추후 history를 따로 db에 저장
         print(self.sum_memory.buffer)
         print(self.sum_memory.chat_memory)
         print("Chatbot deleted properly")
