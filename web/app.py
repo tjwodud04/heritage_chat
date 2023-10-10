@@ -14,7 +14,7 @@ chatbot = HeritageChatbot(verbose=True)
 
 def main():
     st.set_page_config(page_title="Seoul Heritage Guide", page_icon="")
-    st.title("Mainly support information about heritage of Seoul")
+    st.title("Seoul Heritage Guide")
 
     # Initialize chat history
     if "messages" not in st.session_state:
