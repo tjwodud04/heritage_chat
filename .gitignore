@@ -2,8 +2,22 @@
 .env
 poetry.lock
 pyproject.toml
-__pycache__
+__pycache__/
+*.py[cod]
+*$py.class
 *.txt
 *.json
 *.jsonl
 *.zip
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+
+# Chroma database
+chroma/
