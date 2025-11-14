@@ -1,11 +1,11 @@
-from langchain.embeddings.base import Embeddings
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.llms import OpenAI
-from langchain.text_splitter import CharacterTextSplitter, TokenTextSplitter
-from langchain.vectorstores import Chroma, Pinecone, FAISS
-from langchain.document_loaders import (
+from langchain_core.embeddings import Embeddings
+from langchain_openai import OpenAIEmbeddings, OpenAI
+from langchain.text_splitter import CharacterTextSplitter
+from langchain_text_splitters import TokenTextSplitter
+from langchain_community.vectorstores import Chroma, FAISS
+from langchain_pinecone import PineconeVectorStore
+from langchain_community.document_loaders import (
     TextLoader,
-    # UnstructuredURLLoader,
     RecursiveUrlLoader,
     PlaywrightURLLoader,
     SeleniumURLLoader,
@@ -15,9 +15,9 @@ import os
 from os import PathLike
 from pathlib import Path
 from typing import Union, List, Optional
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from langchain.chains.question_answering import load_qa_chain
-import pinecone
+from pinecone import Pinecone as PineconeClient
 
 # __import__("pysqlite3")
 #
@@ -66,12 +66,10 @@ def get_pinecone_retriever(
     environment: Optional[str] = None,
     index: Optional[str] = None,
 ):
-    pinecone.init(
-        api_key=api_key or os.getenv("PINECONE_API_KEY"),
-        environment=environment or os.getenv("PINECONE_ENV"),
-    )
-    vector_db = Pinecone(
-        index=pinecone.index.Index(index or os.getenv("PINECONE_INDEX")),
+    pc = PineconeClient(api_key=api_key or os.getenv("PINECONE_API_KEY"))
+    index_name = index or os.getenv("PINECONE_INDEX")
+    vector_db = PineconeVectorStore(
+        index=pc.Index(index_name),
         embedding=embedding_model,
         text_key="text",
     )
@@ -82,7 +80,7 @@ def get_faiss_ensemble_retriever(
     embedding_model: Embeddings,
     index_path: Union[str, PathLike, Path] = "./heritage_vectorized_result/",
 ):
-    faiss_db = FAISS.load_local(folder_path=index_path, embeddings=embedding_model)
+    faiss_db = FAISS.load_local(folder_path=index_path, embeddings=embedding_model, allow_dangerous_deserialization=True)
     return faiss_db.as_retriever()
 
 
@@ -90,5 +88,5 @@ if __name__ == "__main__":
     query = "Is there any information of heritage that is located on Seoul?"
     vector_db_chain = get_faiss_ensemble_retriever(OpenAIEmbeddings())
 
-    related_laws = vector_db_chain.get_relevant_documents(query)
+    related_laws = vector_db_chain.invoke(query)
     print(related_laws)

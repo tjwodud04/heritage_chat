@@ -1,6 +1,6 @@
 from langchain.chains import LLMChain
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 
 from pydantic import BaseModel, Field
@@ -51,4 +51,5 @@ if __name__ == "__main__":
     load_dotenv()
 
     chain = get_heritage_help_chain(ChatOpenAI())
-    chain.run("What is the most famous heritage in Seoul?")
+    result = chain.invoke({"inquiry": "What is the most famous heritage in Seoul?", "related_heritage": "", "history": ""})
+    print(result["text"])

@@ -8,17 +8,14 @@ import time
 from tqdm import tqdm
 from collections import deque
 
-from langchain.document_loaders import TextLoader
-from langchain.embeddings import (
-    HuggingFaceEmbeddings,
-    OpenAIEmbeddings,
-)  # 무료, OpenAIEmbeddings  #유료
-from langchain.chat_models import ChatOpenAI
+from langchain_community.document_loaders import TextLoader
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.docstore.document import Document
-from langchain.indexes import VectorstoreIndexCreator
-from langchain.vectorstores import FAISS, Pinecone, Chroma  # 무료
-from langchain.vectorstores.base import VectorStoreRetriever
+from langchain_core.documents import Document
+from langchain_community.vectorstores import FAISS, Chroma
+from langchain_pinecone import PineconeVectorStore
+from langchain_core.vectorstores import VectorStoreRetriever
 from langchain.chains import RetrievalQA
 
 # __import__("pysqlite3")
@@ -26,7 +23,7 @@ from langchain.chains import RetrievalQA
 #
 # sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 
-import pinecone
+from pinecone import Pinecone as PineconeClient
 import chromadb
 
 from dotenv import load_dotenv
@@ -99,9 +96,7 @@ def embed_with_pinecone(
         chunk_size: int = 1000,
         chunk_overlap: int = 100,
 ):
-    pinecone.init(
-        api_key=os.getenv("PINECONE_API_KEY"), environment=os.getenv("PINECONE_ENV")
-    )
+    pc = PineconeClient(api_key=os.getenv("PINECONE_API_KEY"))
 
     txt_files = []
     for root, dirs, files in os.walk(root_path):
@@ -114,8 +109,9 @@ def embed_with_pinecone(
         chunk_size=chunk_size, chunk_overlap=chunk_overlap
     )
     embedding_model = OpenAIEmbeddings()
-    vector_store = Pinecone(
-        index=pinecone.Index(os.getenv("PINECONE_INDEX")),
+    index_name = os.getenv("PINECONE_INDEX")
+    vector_store = PineconeVectorStore(
+        index=pc.Index(index_name),
         embedding=embedding_model,
         text_key="text",
     )
@@ -126,8 +122,10 @@ def embed_with_pinecone(
 
 
 def get_pinecone_retriever() -> VectorStoreRetriever:
-    db_call = Pinecone(
-        index=pinecone.Index(os.getenv("PINECONE_INDEX")),
+    pc = PineconeClient(api_key=os.getenv("PINECONE_API_KEY"))
+    index_name = os.getenv("PINECONE_INDEX")
+    db_call = PineconeVectorStore(
+        index=pc.Index(index_name),
         embedding=OpenAIEmbeddings(),
         text_key="text",
     )
@@ -152,5 +150,5 @@ if __name__ == "__main__":
     )
     while True:
         q = input("query:")
-        heritage_docs = heritage_retriever.get_relevant_documents(q)
+        heritage_docs = heritage_retriever.invoke(q)
         print(heritage_docs)

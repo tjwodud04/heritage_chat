@@ -4,14 +4,13 @@ from jinja2 import Template
 import json
 import os
 
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.memory import (
     ConversationBufferMemory,
     ConversationSummaryMemory,
     ChatMessageHistory,
 )
-from langchain.schema.document import Document
+from langchain_core.documents import Document
 
 from typing import Any, Dict, List
 from dotenv import load_dotenv
@@ -52,15 +51,15 @@ class HeritageChatbot:
         return "#"+src+'\n'+doc.page_content
 
     def __call__(self, inquiry: str) -> Dict:
-        heritage_basis:List[Document] = self.retriever.get_relevant_documents(inquiry)
+        heritage_basis:List[Document] = self.retriever.invoke(inquiry)
         heritage_basis:List[str] = list(map(self.__proc_heritage_doc, heritage_basis))
         heritage_basis = "\n\n\n".join(heritage_basis)
 
-        eng_guide = self.heritage_help_chain.run(
-            inquiry=inquiry,
-            related_heritage=heritage_basis[:10],
-            history=self.sum_memory.buffer
-        )
+        eng_guide = self.heritage_help_chain.invoke({
+            "inquiry": inquiry,
+            "related_heritage": heritage_basis[:10],
+            "history": self.sum_memory.buffer
+        })["text"]
         eng_guide_dict = json.loads(eng_guide)
         eng_guide_format = """
                             ### Brief Explanation
