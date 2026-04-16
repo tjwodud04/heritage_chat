@@ -1,7 +1,7 @@
 langchain==0.3.27
 langchain-community==0.3.31
 langchain-core==0.3.81
-langchain-openai==0.2.14
+langchain-openai==1.1.14
 langchain-pinecone==0.2.0
 langchain-text-splitters==0.3.11
 openai==1.58.1
